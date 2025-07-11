@@ -1,3 +1,3 @@
-# R/`VE_{nai}`
+# R/`VEnai`
 
-Package for `VE_{NAI}`. Details TBD.
+Package for `VEnai`. Details TBD.
