@@ -10,6 +10,7 @@ ve_from_fits(
   symp_lr_fit,
   data,
   t0 = quantile(data$ftime, c(0.2, 0.5, 0.9)),
+  vax_name = "vax",
   ...
 )
 }

@@ -4,6 +4,8 @@
 #' @param vax_name name of vaccine variable
 #' @param time_name name of time of event variable
 #' @param event_name name of event variable
+#' @param symp_ind_name name of symptomatic infection indicator variable
+#' @param weight_name name of weight variable, if applicable
 #' @param symp_level value taken by symptomatic level of event_name variable
 #' @param asymp_level value taken by asymptomatic level of event_name variable
 #' @param covariate_names character vector of covariate names to adjust for
@@ -19,6 +21,8 @@ ve_nai <- function(data,
                    vax_name = "vax",
                    time_name = "ftime",
                    event_name = "ftype",
+                   symp_ind_name = "symp_ind",
+                   weight_name = NULL,
                    symp_level = 1, 
                    asymp_level = 2,
                    covariate_names = c("Age", "Sex", "HighRiskInd",
@@ -41,18 +45,30 @@ ve_nai <- function(data,
   asymp_formula <- as.formula(paste0("survival::Surv(", time_name, ", ", event_name, " == ", asymp_level, ") ~ ",
                                     vax_name, " + ", paste(covariate_names, collapse = "+")))
   
-  symp_lr_formula <-  as.formula(paste0("symp_ind ~ ", vax_name, " + ", paste(covariate_names, collapse = "+")))
+  symp_lr_formula <-  as.formula(paste0(symp_ind_name, " ~ ", vax_name, " + ", paste(covariate_names, collapse = "+")))
   
   # Fit cox models for symptomatic & asymptomatic infections, symptomatic GLM
-  symp_cox_fit <- survival::coxph(symp_formula, data = data)
-  
-  asymp_cox_fit <- survival::coxph(asymp_formula, data = data)
-
-  symp_lr_fit <- glm(symp_lr_formula, 
-    # subset to infected participants only (given uninfected == 0)
-    data = data[data[[event_name]] > 0, ],
-    family = stats::binomial()
-  )
+  if(is.null(weight_name)){
+    symp_cox_fit <- survival::coxph(symp_formula, data = data)
+    
+    asymp_cox_fit <- survival::coxph(asymp_formula, data = data)
+    
+    symp_lr_fit <- glm(symp_lr_formula, 
+                       # subset to infected participants only (given uninfected == 0)
+                       data = data[data[[event_name]] > 0, ],
+                       family = stats::binomial()
+    )
+  } else{
+    symp_cox_fit <- survival::coxph(symp_formula, data = data, weights = data[[weight_name]])
+    
+    asymp_cox_fit <- survival::coxph(asymp_formula, data = data, weights = data[[weight_name]])
+    
+    symp_lr_fit <- glm(symp_lr_formula, 
+                       # subset to infected participants only (given uninfected == 0)
+                       data = data[data[[event_name]] > 0, ],
+                       weights = data[[weight_name]][data[[event_name]] > 0],
+                       family = stats::binomial())
+  }
   
   # Get point estimates
   ve_fit <- ve_from_fits(
@@ -60,7 +76,8 @@ ve_nai <- function(data,
     asymp_cox_fit = asymp_cox_fit, 
     symp_lr_fit = symp_lr_fit, 
     data = data, 
-    t0 = t0
+    t0 = t0,
+    vax_name = vax_name
   )
   
   # Bootstrap estimates
@@ -70,7 +87,9 @@ ve_nai <- function(data,
                                   symp_lr_formula = symp_lr_formula,
                                   n_boot = n_boot,
                                   t0 = t0,
-                                  event_name = event_name)
+                                  event_name = event_name, 
+                                  weight_name = weight_name,
+                                  vax_name = vax_name)
   
   if(return_models){
     out <- list(ve_fit = ve_fit,

@@ -11,7 +11,9 @@ one_boot(
   symp_lr_formula,
   n_boot,
   t0,
-  event_name
+  event_name,
+  weight_name,
+  vax_name
 )
 }
 \arguments{
@@ -28,6 +30,8 @@ one_boot(
 \item{t0}{numeric value or numeric vector of t0s}
 
 \item{event_name}{name of event variable}
+
+\item{weight_name}{name of weight variable, if applicable}
 }
 \value{
 dataframe with VE and P estimates

@@ -7,25 +7,66 @@
 #' @param n_boot number of bootstrap replicates for bootstrap CI
 #' @param t0 numeric value or numeric vector of t0s
 #' @param event_name name of event variable
+#' @param weight_name name of weight variable, if applicable
 #'
 #' @returns dataframe with VE and P estimates
 #' @keywords internal
-one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name){
+one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name, weight_name, vax_name){
   
   # Create bootstrap data
   boot_id <- sample(1:nrow(data), replace = TRUE)
   boot_data <- data[boot_id, ,drop = FALSE]
 
   # Fit cox models for symptomatic & asymptomatic infections, symptomatic GLM
-  symp_cox_fit <- survival::coxph(symp_formula, data = boot_data, model = TRUE)
-  
-  asymp_cox_fit <- survival::coxph(asymp_formula, data = boot_data, model = TRUE)
-  
-  symp_lr_fit <- glm(symp_lr_formula, 
-                     # subset to infected participants only (given uninfected == 0)
-                     data = boot_data[boot_data[[event_name]] > 0, ],
-                     family = stats::binomial()
-  )
+  if(is.null(weight_name)){
+    symp_cox_fit <- survival::coxph(symp_formula, data = boot_data, model = TRUE)
+    
+    asymp_cox_fit <- survival::coxph(asymp_formula, data = boot_data, model = TRUE)
+    
+    symp_lr_fit <- glm(symp_lr_formula, 
+                       # subset to infected participants only (given uninfected == 0)
+                       data = boot_data[boot_data[[event_name]] > 0, ],
+                       family = stats::binomial()
+    )
+  } else{
+    # get weights externally bc coxph env issue
+    boot_weights <- boot_data[[weight_name]]
+    
+    #symp_cox_fit <- survival::coxph(symp_formula, data = boot_data, weights = boot_weights, model = TRUE)
+    
+    #asymp_cox_fit <- survival::coxph(asymp_formula, data = boot_data, weights = boot_weights, model = TRUE)
+    
+    # symp_lr_fit <- glm(symp_lr_formula, 
+    #                    # subset to infected participants only (given uninfected == 0)
+    #                    data = boot_data[boot_data[[event_name]] > 0, ],
+    #                    weights = boot_weights[boot_data[[event_name]] > 0],
+    #                    family = stats::binomial())
+    
+    # chatgpt trick bc environment issue with weights??
+    symp_cox_fit <- eval(
+      substitute(
+        survival::coxph(symp_formula, data = boot_data, weights = W, model = TRUE),
+        list(W = boot_weights)
+      )
+    )
+    
+    asymp_cox_fit <- eval(
+      substitute(
+        survival::coxph(asymp_formula, data = boot_data, weights = W, model = TRUE),
+        list(W = boot_weights)
+      )
+    )
+
+    symp_lr_fit <- eval(
+      substitute(
+        glm(symp_lr_formula, 
+           # subset to infected participants only (given uninfected == 0)
+           data = boot_data[boot_data[[event_name]] > 0, ],
+           weights = W,
+           family = stats::binomial()),
+        list(W = boot_weights[boot_data[[event_name]] > 0])),
+    )
+  }
   
   # Get point estimates
   ve_fit <- ve_from_fits(
@@ -33,7 +74,8 @@ one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot,
     asymp_cox_fit = asymp_cox_fit, 
     symp_lr_fit = symp_lr_fit, 
     data = boot_data, 
-    t0 = t0
+    t0 = t0,
+    vax_name = vax_name
   )
   
   # Reformat results to get SE for VE_X and Ps more easily
@@ -61,10 +103,11 @@ one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot,
 #' @param n_boot number of bootstrap replicates for bootstrap CI
 #' @param t0 numeric value or numeric vector of t0s
 #' @param event_name name of event variable
+#' @param weight_name name of weight variable, if applicable
 #'
 #' @returns list of standard error, lower 95% CI bound, and upper 95% CI bound for each VE estimate and stratum probability
 #' @keywords internal
-bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name){
+bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name, weight_name, vax_name){
   
   # Do n_boot bootstrap replicates
   boot_estimates <- replicate(n_boot, one_boot(data = data, 
@@ -73,7 +116,9 @@ bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formu
                                                symp_lr_formula = symp_lr_formula,
                                                n_boot = n_boot,
                                                t0 = t0,
-                                               event_name = event_name), simplify = FALSE) 
+                                               event_name = event_name,
+                                               weight_name = weight_name,
+                                               vax_name = vax_name), simplify = FALSE) 
   
   boot_res <- data.frame(do.call(rbind, boot_estimates))
   

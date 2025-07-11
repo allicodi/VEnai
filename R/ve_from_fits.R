@@ -13,6 +13,7 @@ ve_from_fits <- function(
     symp_lr_fit,
     data,
     t0 = quantile(data$ftime, c(0.2, 0.5, 0.9)),
+    vax_name = "vax",
     ...
 ){
   n <- dim(data)[1]
@@ -36,7 +37,7 @@ ve_from_fits <- function(
   surv_data$total_ci <- 1 - exp(-surv_data$total_chaz)
   
   # predict from models under vaccine/no vaccine
-  data0 <- data; data0$vax <- 0
+  data0 <- data; data0[[vax_name]] <- 0
   lp_symp_vax0 <- predict(symp_cox_fit, newdata = data0, type = "lp")
   lp_asymp_vax0 <- predict(asymp_cox_fit, newdata = data0, type = "lp")
   # P(Y_S = 1 | V = 0,  X = x)
@@ -44,7 +45,7 @@ ve_from_fits <- function(
     symp_lr_fit, newdata = data0, type = "response"
   )
   
-  data1 <- data; data1$vax <- 1
+  data1 <- data; data1[[vax_name]] <- 1
   lp_symp_vax1 <- predict(symp_cox_fit, newdata = data1, type = "lp")
   lp_asymp_vax1 <- predict(asymp_cox_fit, newdata = data1, type = "lp")
   p_symp__inf_vax1 <- predict(

@@ -11,7 +11,9 @@ bootstrap_estimates(
   symp_lr_formula,
   n_boot,
   t0,
-  event_name
+  event_name,
+  weight_name,
+  vax_name
 )
 }
 \arguments{
@@ -28,6 +30,8 @@ bootstrap_estimates(
 \item{t0}{numeric value or numeric vector of t0s}
 
 \item{event_name}{name of event variable}
+
+\item{weight_name}{name of weight variable, if applicable}
 }
 \value{
 list of standard error, lower 95\% CI bound, and upper 95\% CI bound for each VE estimate and stratum probability

@@ -9,6 +9,8 @@ ve_nai(
   vax_name = "vax",
   time_name = "ftime",
   event_name = "ftype",
+  symp_ind_name = "symp_ind",
+  weight_name = NULL,
   symp_level = 1,
   asymp_level = 2,
   covariate_names = c("Age", "Sex", "HighRiskInd", "EthnicityHispanic",
@@ -28,6 +30,10 @@ ve_nai(
 \item{time_name}{name of time of event variable}
 
 \item{event_name}{name of event variable}
+
+\item{symp_ind_name}{name of symptomatic infection indicator variable}
+
+\item{weight_name}{name of weight variable, if applicable}
 
 \item{symp_level}{value taken by symptomatic level of event_name variable}
 
