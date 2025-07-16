@@ -20,6 +20,8 @@ ve_nai(
   n_boot = n_boot,
   return_models = FALSE,
   bounds = FALSE,
+  sensitivity = FALSE,
+  delta = 1,
   seed = 12345
 )
 }

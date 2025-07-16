@@ -9,12 +9,17 @@ one_boot(
   asymp_formula,
   symp_formula,
   symp_lr_formula,
+  symp_level,
+  asymp_level,
   n_boot,
   t0,
   event_name,
   weight_name,
   vax_name,
-  bounds
+  time_name,
+  bounds,
+  sensitivity,
+  delta
 )
 }
 \arguments{

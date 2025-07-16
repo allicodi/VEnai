@@ -35,6 +35,8 @@ ve_nai <- function(data,
                    n_boot = n_boot,
                    return_models = FALSE, 
                    bounds = FALSE,
+                   sensitivity = FALSE,
+                   delta = 1,
                    seed = 12345){
   
   # set seed for reproducibility
@@ -90,6 +92,20 @@ ve_nai <- function(data,
                                    symp_level = symp_level,
                                    asymp_level = asymp_level,
                                    t0 = t0)
+  } else{
+    ve_nai_bounds_res <- NULL
+  }
+  
+  if(sensitivity){
+    ve_nai_sens_res <- ve_nai_sensitivity(data = data,
+                                          symp_cox_fit = symp_cox_fit,
+                                          asymp_cox_fit = asymp_cox_fit,
+                                          symp_lr_fit = symp_lr_fit,
+                                          t0 = t0,vax_name = vax_name,
+                                          symp_ind_name = symp_ind_name,
+                                          delta = delta)
+  } else{
+    ve_nai_sens_res <- NULL
   }
   
   # Bootstrap estimates
@@ -97,45 +113,35 @@ ve_nai <- function(data,
                                   asymp_formula = asymp_formula,
                                   symp_formula = symp_formula,
                                   symp_lr_formula = symp_lr_formula,
+                                  symp_level = symp_level,
+                                  asymp_level = asymp_level,
                                   n_boot = n_boot,
                                   t0 = t0,
                                   event_name = event_name, 
                                   weight_name = weight_name,
                                   vax_name = vax_name,
-                                  bounds = bounds)
+                                  time_name = time_name,
+                                  bounds = bounds,
+                                  sensitivity = sensitivity,
+                                  delta = delta)
   
   if(return_models){
-    if(bounds){
       out <- list(ve_fit = ve_fit,
                   ve_nai_bounds = ve_nai_bounds_res,
+                  ve_nai_sens = ve_nai_sens_res,
                   boot_est = boot_est,
                   symp_cox_fit = symp_cox_fit,
                   asymp_cox_fit = asymp_cox_fit,
                   symp_lr_fit = symp_lr_fit)
-    }else{
-      out <- list(ve_fit = ve_fit,
-                  ve_nai_bounds = NULL, 
-                  boot_est = boot_est,
-                  symp_cox_fit = symp_cox_fit,
-                  asymp_cox_fit = asymp_cox_fit,
-                  symp_lr_fit = symp_lr_fit)
-    }
+
   } else{
-    if(bounds){
       out <- list(ve_fit = ve_fit,
                   ve_nai_bounds = ve_nai_bounds_res,
+                  ve_nai_sens = ve_nai_sens_res,
                   boot_est = boot_est,
                   symp_cox_fit = NULL,
                   asymp_cox_fit = NULL,
                   symp_lr_fit =  NULL)
-    }else{
-      out <- list(ve_fit = ve_fit,
-                  ve_nai_bounds = NULL,
-                  boot_est = boot_est,
-                  symp_cox_fit = NULL,
-                  asymp_cox_fit = NULL,
-                  symp_lr_fit =  NULL)
-    }
   }
   
   class(out) <- "ve_nai"
