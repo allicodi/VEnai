@@ -90,6 +90,10 @@ ve_nai_sensitivity <- function(
   # Denominator: p_symp0__inf_vax1 * ci_inf_vax0
   
   # VE_I(X_i)
+  
+  # issue in some bootstrap samples where ci_inf_vax0 == 0, truncate temp?
+  ci_inf_vax0 <- ifelse(ci_inf_vax0 < 0.001, 0.001, ci_inf_vax0)
+  
   ve_any_inf <- 1 - ci_inf_vax1 / ci_inf_vax0
   
   # Denominator:
