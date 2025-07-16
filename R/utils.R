@@ -28,8 +28,22 @@ print.ve_nai <- function(object, what = "ve", ...){
                    round(boot_t0[[p]]$upper,4), ") \n"))
       }
     }
+  } else if(what == "ve_nai_bounds"){
+    if(!is.null(object$ve_nai_bounds)){
+      for(i in 1:length(object$ve_nai_bounds$t0)){
+        boot_t0 <- object$boot_est[[paste0("ve_nai_bound_t0_", object$ve_nai_bounds$t0[i])]]
+        cat(paste0("------- VE_nai bounds for t0 = ", object$ve_nai_bounds$t0[i], " -------\n"))
+        cat(paste0("Lower bound: ", round(object$ve_nai_bounds$lower_bound[i],4),
+                   " (", round(boot_t0$lower_bound$lower,4), ", ",
+                   round(boot_t0$lower_bound$upper,4), ") \n"))
+        cat(paste0("Upper bound: ", round(object$ve_nai_bounds$upper_bound[i],4),
+                   " (", round(boot_t0$upper_bound$lower,4), ", ",
+                   round(boot_t0$upper_bound$upper,4), ") \n"))
+        
+      }
+    }
   }
-  
+
 }
 
 #' Print the output of a \code{"ps_ve"} object.

@@ -13,7 +13,8 @@ one_boot(
   t0,
   event_name,
   weight_name,
-  vax_name
+  vax_name,
+  bounds
 )
 }
 \arguments{

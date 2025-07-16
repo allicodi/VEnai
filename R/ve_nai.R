@@ -12,6 +12,7 @@
 #' @param t0 numeric value or numeric vector of t0s
 #' @param n_boot number of bootstrap replicates for bootstrap CI
 #' @param return_models boolean to return Cox and LR models for estimates, default FALSE
+#' @param bounds boolean to return bounds on VE_{NAI} without cross-world assumption, default FALSE
 #' @param seed seed for reproducibility
 #' 
 #' @return VE NAI object containing point estimates, confidence intervals/SE estimates, and (optionally) model fits
@@ -33,6 +34,7 @@ ve_nai <- function(data,
                    t0 = c(175, 180, 185, 190, 195, 200),
                    n_boot = n_boot,
                    return_models = FALSE, 
+                   bounds = FALSE,
                    seed = 12345){
   
   # set seed for reproducibility
@@ -80,6 +82,16 @@ ve_nai <- function(data,
     vax_name = vax_name
   )
   
+  if(bounds){
+    ve_nai_bounds_res <- ve_nai_bounds(data = data,
+                                   vax_name = vax_name,
+                                   time_name = time_name,
+                                   event_name = event_name,
+                                   symp_level = symp_level,
+                                   asymp_level = asymp_level,
+                                   t0 = t0)
+  }
+  
   # Bootstrap estimates
   boot_est <- bootstrap_estimates(data = data,
                                   asymp_formula = asymp_formula,
@@ -89,20 +101,41 @@ ve_nai <- function(data,
                                   t0 = t0,
                                   event_name = event_name, 
                                   weight_name = weight_name,
-                                  vax_name = vax_name)
+                                  vax_name = vax_name,
+                                  bounds = bounds)
   
   if(return_models){
-    out <- list(ve_fit = ve_fit,
-                boot_est = boot_est,
-                symp_cox_fit = symp_cox_fit,
-                asymp_cox_fit = asymp_cox_fit,
-                symp_lr_fit = symp_lr_fit)
+    if(bounds){
+      out <- list(ve_fit = ve_fit,
+                  ve_nai_bounds = ve_nai_bounds_res,
+                  boot_est = boot_est,
+                  symp_cox_fit = symp_cox_fit,
+                  asymp_cox_fit = asymp_cox_fit,
+                  symp_lr_fit = symp_lr_fit)
+    }else{
+      out <- list(ve_fit = ve_fit,
+                  ve_nai_bounds = NULL, 
+                  boot_est = boot_est,
+                  symp_cox_fit = symp_cox_fit,
+                  asymp_cox_fit = asymp_cox_fit,
+                  symp_lr_fit = symp_lr_fit)
+    }
   } else{
-    out <- list(ve_fit = ve_fit,
-                boot_est = boot_est,
-                symp_cox_fit = NULL,
-                asymp_cox_fit = NULL,
-                symp_lr_fit =  NULL)
+    if(bounds){
+      out <- list(ve_fit = ve_fit,
+                  ve_nai_bounds = ve_nai_bounds_res,
+                  boot_est = boot_est,
+                  symp_cox_fit = NULL,
+                  asymp_cox_fit = NULL,
+                  symp_lr_fit =  NULL)
+    }else{
+      out <- list(ve_fit = ve_fit,
+                  ve_nai_bounds = NULL,
+                  boot_est = boot_est,
+                  symp_cox_fit = NULL,
+                  asymp_cox_fit = NULL,
+                  symp_lr_fit =  NULL)
+    }
   }
   
   class(out) <- "ve_nai"

@@ -11,7 +11,7 @@
 #'
 #' @returns dataframe with VE and P estimates
 #' @keywords internal
-one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name, weight_name, vax_name){
+one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name, weight_name, vax_name, bounds){
   
   # Create bootstrap data
   boot_id <- sample(1:nrow(data), replace = TRUE)
@@ -78,6 +78,18 @@ one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot,
     vax_name = vax_name
   )
   
+  if(bounds){
+    ve_nai_bounds_res <- ve_nai_bounds(data = boot_data,
+                                        vax_name = vax_name,
+                                        time_name = time_name,
+                                        event_name = event_name,
+                                        symp_level = symp_level,
+                                        asymp_level = asymp_level,
+                                        t0 = t0)
+  } else{
+    ve_nai_bounds_res <- NULL
+  }
+  
   # Reformat results to get SE for VE_X and Ps more easily
   results_df <- data.frame(t0 = ve_fit$t0,
                            ve_i = ve_fit$ve_i,
@@ -91,7 +103,8 @@ one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot,
                            p_helped = ve_fit$p_helped,
                            p_helpedplus = ve_fit$p_helpedplus)
   
-  return(results_df)
+  return(list(results_df = results_df,
+              ve_nai_bounds = ve_nai_bounds_res))
 }
 
 #' Function for n_boot bootstrap replicate and standard error/CIs
@@ -107,7 +120,7 @@ one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot,
 #'
 #' @returns list of standard error, lower 95% CI bound, and upper 95% CI bound for each VE estimate and stratum probability
 #' @keywords internal
-bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name, weight_name, vax_name){
+bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formula, n_boot, t0, event_name, weight_name, vax_name, bounds){
   
   # Do n_boot bootstrap replicates
   boot_estimates <- replicate(n_boot, one_boot(data = data, 
@@ -118,16 +131,24 @@ bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formu
                                                t0 = t0,
                                                event_name = event_name,
                                                weight_name = weight_name,
-                                               vax_name = vax_name), simplify = FALSE) 
+                                               vax_name = vax_name, 
+                                               bounds = bounds), simplify = FALSE) 
   
-  boot_res <- data.frame(do.call(rbind, boot_estimates))
+  # Extract and rbind 
+  results_df_list <- lapply(boot_estimates, `[[`, "results_df")
+  results_df_all <- do.call(rbind, results_df_list)
+
+  if(bounds){
+    ve_nai_bounds_list <- lapply(boot_estimates, `[[`, "ve_nai_bounds")
+    ve_nai_bounds_all <- do.call(rbind, ve_nai_bounds_list)
+  }
   
   # Full results list
   out <- list()
   
   # For each threshold:
-  for(t in unique(boot_res$t0)){
-    boot_res_t <- boot_res[boot_res$t0 == t,]
+  for(t in unique(t0)){
+    boot_res_t <- results_df_all[results_df_all$t0 == t,]
     
     t0_out <- list()
     
@@ -142,6 +163,22 @@ bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formu
     
     # Add results for given threshold to full results list
     out[[paste0("t0_", t)]] <- t0_out
+    
+    # Repeat above for lower and upper bound on each bound 
+    if(bounds){
+      bounds_t <- ve_nai_bounds_all[ve_nai_bounds_all$t0 == t,]
+      bounds_out <- list()
+      
+      for(col in c("lower_bound", "upper_bound")){
+        se <- sd(bounds_t[,col])
+        lower <- quantile(bounds_t[,col], p = 0.025, names = FALSE)
+        upper <- quantile(bounds_t[,col], p = 0.975, names = FALSE)
+        
+        bounds_out[[col]] <- list(se = se, lower = lower, upper = upper)
+      }
+      
+      out[[paste0("ve_nai_bound_t0_", t)]] <- bounds_out
+    }
     
   }
   

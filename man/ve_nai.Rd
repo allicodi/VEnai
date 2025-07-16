@@ -19,6 +19,7 @@ ve_nai(
   t0 = c(175, 180, 185, 190, 195, 200),
   n_boot = n_boot,
   return_models = FALSE,
+  bounds = FALSE,
   seed = 12345
 )
 }
@@ -46,6 +47,8 @@ ve_nai(
 \item{n_boot}{number of bootstrap replicates for bootstrap CI}
 
 \item{return_models}{boolean to return Cox and LR models for estimates, default FALSE}
+
+\item{bounds}{boolean to return bounds on VE_{NAI} without cross-world assumption, default FALSE}
 
 \item{seed}{seed for reproducibility}
 }
