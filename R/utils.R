@@ -51,7 +51,7 @@ print.ve_nai <- function(object, what = "ve", ...){
         boot_t0 <- object$boot_est[[paste0("ve_nai_sens_t0_", t0[i])]]
         cat(paste0("------- VE_nai sensitivity analysis for t0 = ", t0[i], " -------\n"))
         for(d in 1:length(delta)){
-          cat(paste0("Delta = ", delta[d], ": ", round(res_t0$ve_nai[res_t0$delta == delta[d]],4), 
+          cat(paste0("Delta = ", round(delta[d],4), ": ", round(res_t0$ve_nai[res_t0$delta == delta[d]],4), 
                      " (", round(boot_t0$lower[boot_t0$delta == delta[d]],4), ", ",
                      round(boot_t0$upper[boot_t0$delta == delta[d]],4), ")\n"))
         }

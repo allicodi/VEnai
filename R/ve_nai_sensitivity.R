@@ -65,7 +65,7 @@ ve_nai_sensitivity <- function(
   # ??? symp_lr_fit was already fit in infected participants only? 
   # so P(Y_S = 1 | V = 1, X = X_i), i = 1,...,n = p_symp__inf_vax1 == P(Y_S = 1 | V = 1, Y_I = 1, X = X_i)??
   # in which case:
-  p_symp0__inf_vax1 <- 1 - p_symp__inf_vax1
+  p_symp0__inf_vax0 <- 1 - p_symp__inf_vax0
   
   # conditional cumulative incidence any infection under no vaccine/vaccine
   # P(Y_I = 1 | V = v, X = x)
@@ -86,26 +86,29 @@ ve_nai_sensitivity <- function(
   
   # Alternative VE_NAI:
   # VE_I(X_i) = 1 - 1 - ci_inf_vax1[i,] / ci_inf_vax0[i,]
-  # Numerator: {p_symp0__inf_vax1 / (1 + VE_I(X_i) * [(1- delta) / delta]) } * ci_inf_vax1
-  # Denominator: p_symp0__inf_vax1 * ci_inf_vax0
+  # Numerator: {p_symp0__inf_vax0 / (1 + VE_I(X_i) * [(1- delta) / delta]) } * ci_inf_vax1
+  # Denominator: p_symp0__inf_vax0 * ci_inf_vax0
   
   # VE_I(X_i)
   
   # issue in some bootstrap samples where ci_inf_vax0 == 0, truncate temp?
+  ci_inf_vax1 <- ifelse(ci_inf_vax1 < 0.001, 0.001, ci_inf_vax1)
   ci_inf_vax0 <- ifelse(ci_inf_vax0 < 0.001, 0.001, ci_inf_vax0)
   
   ve_any_inf <- 1 - ci_inf_vax1 / ci_inf_vax0
   
   # Denominator:
-  ve_nai_denom <- colMeans(p_symp0__inf_vax1 * ci_inf_vax0)
+  ve_nai_denom <- colMeans(p_symp0__inf_vax0 * ci_inf_vax0)
+  #ve_nai_denom <- colMeans(1 - ve_any_inf + (1/delta)*ve_any_inf)
   
   delta_res <- vector("list", length = length(delta))
   
   for(d in 1:length(delta)){
     # Numerator:
-    ve_nai_num <- colMeans((p_symp0__inf_vax1 / 
-                              (1 + (ve_any_inf * ((1 - delta[d]) / delta[d]))))
-                           * ci_inf_vax1)
+    ve_nai_num <- colMeans((p_symp0__inf_vax0 / 
+                              #(1 + (ve_any_inf * ((1 - delta[d]) / delta[d]))))
+                              (1 - ve_any_inf + (1/delta[d])*ve_any_inf)
+                           * ci_inf_vax1))
     
     ve_nai <- 1 - ve_nai_num / ve_nai_denom
     
