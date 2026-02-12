@@ -14,6 +14,11 @@
 #' @param return_models boolean to return Cox and LR models for estimates, default FALSE
 #' @param bounds boolean to return bounds on VE_{NAI} without cross-world assumption, default FALSE
 #' @param seed seed for reproducibility
+#' @param delta_X_variable If non \code{NULL} then a separate value of delta is
+#' applied for each level of delta_X_varaible. Currently only supports variables
+#' with two unique values. If non \code{NULL}, then code will calculate ve_nai for
+#' a two-way grid of all values of \code{delta}, where values of delta_X_variable
+#' are assigned all unique combinations of the user-supplied delta.
 #' 
 #' @return VE NAI object containing point estimates, confidence intervals/SE estimates, and (optionally) model fits
 #' 
@@ -37,6 +42,7 @@ ve_nai <- function(data,
                    bounds = FALSE,
                    sensitivity = FALSE,
                    delta = 1,
+                   delta_X_variable = NULL,
                    seed = 12345){
   
   # set seed for reproducibility
@@ -101,9 +107,11 @@ ve_nai <- function(data,
                                           symp_cox_fit = symp_cox_fit,
                                           asymp_cox_fit = asymp_cox_fit,
                                           symp_lr_fit = symp_lr_fit,
-                                          t0 = t0,vax_name = vax_name,
+                                          t0 = t0,
+                                          vax_name = vax_name,
                                           symp_ind_name = symp_ind_name,
-                                          delta = delta)
+                                          delta = delta,
+                                          delta_X_variable = delta_X_variable)
   } else{
     ve_nai_sens_res <- NULL
   }
