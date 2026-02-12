@@ -14,7 +14,7 @@
 one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula, 
                      symp_level, asymp_level, n_boot, t0, 
                      event_name, weight_name, vax_name, time_name, bounds,
-                     sensitivity, delta){
+                     sensitivity, delta, delta_X_variable){
   
   # Create bootstrap data
   boot_id <- sample(1:nrow(data), replace = TRUE)
@@ -100,7 +100,8 @@ one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula,
                                          symp_lr_fit = symp_lr_fit,
                                          t0 = t0,vax_name = vax_name,
                                          symp_ind_name = symp_ind_name,
-                                         delta = delta)
+                                         delta = delta,
+                                         delta_X_variable = delta_X_variable)
   } else{
     ve_nai_sens_res <- NULL
   }
