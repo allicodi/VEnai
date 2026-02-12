@@ -156,10 +156,11 @@ ve_nai_sensitivity <- function(
         )
       }
     }
-    attr(delta_res, "delta_X_variable_levels") <- delta_X_variable_levels
+    
   }
   
   delta_res <- do.call(rbind, delta_res)
+  attr(delta_res, "delta_X_variable_levels") <- delta_X_variable_levels
   
   return(delta_res)
   
