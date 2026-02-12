@@ -138,7 +138,7 @@ one_boot <- function(data, asymp_formula, symp_formula, symp_lr_formula,
 #' @keywords internal
 bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formula, 
                                 symp_level, asymp_level,n_boot, t0, event_name, 
-                                weight_name, vax_name, time_name, bounds, sensitivity, delta){
+                                weight_name, vax_name, time_name, bounds, sensitivity, delta, delta_X_variable){
   
   # Do n_boot bootstrap replicates
   boot_estimates <- replicate(n_boot, one_boot(data = data, 
@@ -155,7 +155,8 @@ bootstrap_estimates <- function(data, asymp_formula, symp_formula, symp_lr_formu
                                                time_name = time_name,
                                                bounds = bounds,
                                                sensitivity = sensitivity,
-                                               delta = delta), simplify = FALSE) 
+                                               delta = delta,
+                                               delta_X_variable = delta_X_variable), simplify = FALSE) 
   
   # Extract and rbind 
   results_df_list <- lapply(boot_estimates, `[[`, "results_df")

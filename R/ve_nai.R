@@ -131,7 +131,8 @@ ve_nai <- function(data,
                                   time_name = time_name,
                                   bounds = bounds,
                                   sensitivity = sensitivity,
-                                  delta = delta)
+                                  delta = delta,
+                                  delta_X_variable = delta_X_variable)
   
   if(return_models){
       out <- list(ve_fit = ve_fit,
